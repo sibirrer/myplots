@@ -7,7 +7,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 
-def lukasPlot(xlabel, ylabel, xMin, xMax, yMin, yMax, x1, y1, label1, x2=None, y2=None, label2=None):
+def contourPlot(xlabel, ylabel, xMin, xMax, yMin, yMax, x1, y1, label1, x2=None, y2=None, label2=None):
     gridLen = 128
     zLevels = np.array([5, 10, 50, 100])
     xGrid, yGrid = np.meshgrid(np.r_[xMin:xMax:(gridLen * 1j)], np.r_[yMin:yMax:(gridLen * 1j)])
