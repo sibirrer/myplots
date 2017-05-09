@@ -389,18 +389,18 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
     l0 = mini * s / cell_area
     l1 = maxi * s / cell_area
     one_sigma = brentq(lambda t: z_int[z_int > t].sum() - .6827,
-        mini, maxi) / cell_area
+        mini, maxi) * s / cell_area
     two_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9545,
-        mini, maxi) / cell_area
+        mini, maxi) * s / cell_area
     three_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9973,
-        mini, maxi) / cell_area
+        mini, maxi) *s / cell_area
     if alpha_off is True:
         if sigma2:
             ax.contourf(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
-            C = ax.contour(X, Y, z, [one_sigma, two_sigma], cmap=cmap, alpha=alpha) # cmap="binary"
+            C = ax.contour(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha) # cmap="binary"
         else:
             ax.contourf(X, Y, z, [three_sigma, two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
-            C = ax.contour(X, Y, z, [one_sigma, two_sigma, three_sigma], cmap=cmap, alpha=alpha) # cmap="binary"
+            C = ax.contour(X, Y, z, [three_sigma, two_sigma, one_sigma], cmap=cmap, alpha=alpha) # cmap="binary"
         #ax.contourf(X, Y, z, [l0, three_sigma, two_sigma, one_sigma, l1], cmap=cmap)
         #C = ax.contour(X, Y, z, [one_sigma, two_sigma, three_sigma], cmap=cmap) # cmap="binary"
     else:
@@ -543,13 +543,15 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
             else:
                 ax = axes[i, i]
             # Plot the histograms.
-            n, b, p = ax.hist(x, weights=weights_list[z], bins=kwargs.get("bins", 200),
+            if True: #hist1d_bool:
+                n, b, p = ax.hist(x, weights=weights_list[z], bins=kwargs.get("bins", 200),
                               range=extents[i], histtype="step",
                               color=kwargs.get("color", "k"))
             ax.set_axis_bgcolor('white')
             if z == 0:
                 if truths is not None:
                     ax.axvline(truths[i], color=truth_color)
+            if z == 0:
                 if hist1d_bool is False:
                     ax.set_visible(False)
                     ax.set_frame_on(False)
@@ -615,7 +617,7 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
                 elif j == i:
                     continue
                 ax.set_axis_bgcolor('white')
-                hist2d_sigma(y, x, ax=ax, extent=[extents[j], extents[i]], cmap=color_scale_list[z], alpha=kwargs.get("alpha", 0.5), bins=kwargs.get("bins", 200), alpha_off=alpha_off)
+                hist2d_sigma(y, x, ax=ax, extent=[extents[j], extents[i]], cmap=color_scale_list[z], alpha=kwargs.get("alpha", 0.5), bins=kwargs.get("bins", 200), alpha_off=alpha_off, sigma2=kwargs.get('sigma2', False))
                 if z == 0:
                     if truths is not None:
                         ax.plot(truths[j], truths[i], "s", color=truth_color)
