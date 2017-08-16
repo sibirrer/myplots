@@ -376,8 +376,16 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
     x_grid, y_grid = np.meshgrid(X, Y)
     points = np.append(x_grid.reshape(-1, 1), y_grid.reshape(-1, 1), axis=1)
 
-    density = gaussian_kde(np.vstack([x, y]))
+    #print(np.min(x), np.max(x), np.min(y), np.max(y))
+    try:
+        density = gaussian_kde(np.vstack([x, y]))
+    except:
+        print("Warnunbg! kde initiation is not working! - ignore plotting")
+        return 0
     z = density.evaluate(points.T)
+    if np.isnan(z[0]):
+        print("Warning: kde is not properly working! - ignore plotting!")
+        return 0
     # z = np.reshape(H, np.product(H.shape))
     z_int = z * cell_area
     s = z_int.sum()
