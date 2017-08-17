@@ -380,7 +380,7 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
     try:
         density = gaussian_kde(np.vstack([x, y]))
     except:
-        print("Warnunbg! kde initiation is not working! - ignore plotting")
+        print("Warning! kde initiation is not working! - ignore plotting")
         return 0
     z = density.evaluate(points.T)
     if np.isnan(z[0]):
@@ -552,10 +552,13 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
                 ax = axes[i, i]
             # Plot the histograms.
             if True: #hist1d_bool:
-                n, b, p = ax.hist(x, weights=weights_list[z], bins=kwargs.get("bins", 200),
+                try:
+                    n, b, p = ax.hist(x, weights=weights_list[z], bins=kwargs.get("bins", 200),
                               range=extents[i], histtype="step",
                               color=kwargs.get("color", "k"))
-            ax.set_axis_bgcolor('white')
+                except:
+                    print("Warning: 1d Histogramm could not be plotted!")
+            ax.set_facecolor('white')
             if z == 0:
                 if truths is not None:
                     ax.axvline(truths[i], color=truth_color)
@@ -624,7 +627,7 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
                     continue
                 elif j == i:
                     continue
-                ax.set_axis_bgcolor('white')
+                ax.set_facecolor('white')
                 hist2d_sigma(y, x, ax=ax, extent=[extents[j], extents[i]], cmap=color_scale_list[z], alpha=kwargs.get("alpha", 0.5), bins=kwargs.get("bins", 200), alpha_off=alpha_off, sigma2=kwargs.get('sigma2', False))
                 if z == 0:
                     if truths is not None:
