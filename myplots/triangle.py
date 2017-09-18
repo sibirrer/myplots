@@ -393,9 +393,12 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
     z = z.reshape(bins, bins)
     mini = min(z_int)
     maxi = max(z_int)
-
+    if np.isnan(mini):
+        print("Warning: nan appearing! - ignore plotting!")
+        return 0
     l0 = mini * s / cell_area
     l1 = maxi * s / cell_area
+
     one_sigma = brentq(lambda t: z_int[z_int > t].sum() - .6827,
         mini, maxi) * s / cell_area
     two_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9545,
