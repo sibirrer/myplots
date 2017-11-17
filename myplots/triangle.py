@@ -398,13 +398,16 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
         return 0
     l0 = mini * s / cell_area
     l1 = maxi * s / cell_area
-
-    one_sigma = brentq(lambda t: z_int[z_int > t].sum() - .6827,
-        mini, maxi) * s / cell_area
-    two_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9545,
-        mini, maxi) * s / cell_area
-    three_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9973,
-        mini, maxi) *s / cell_area
+    try:
+        one_sigma = brentq(lambda t: z_int[z_int > t].sum() - .6827,
+            mini, maxi) * s / cell_area
+        two_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9545,
+            mini, maxi) * s / cell_area
+        three_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9973,
+            mini, maxi) *s / cell_area
+    except:
+        print("Warning: too small area of contours or no point within the extent!")
+        return 0
     if alpha_off is True:
         if sigma2:
             ax.contourf(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
