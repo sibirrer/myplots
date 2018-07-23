@@ -408,20 +408,23 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
     except:
         print("Warning: too small area of contours or no point within the extent!")
         return 0
-    if alpha_off is True:
-        if sigma2:
-            ax.contourf(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
-            C = ax.contour(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha) # cmap="binary"
+    try:
+        if alpha_off is True:
+            if sigma2:
+                ax.contourf(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
+                C = ax.contour(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha) # cmap="binary"
+            else:
+                ax.contourf(X, Y, z, [three_sigma, two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
+                C = ax.contour(X, Y, z, [three_sigma, two_sigma, one_sigma], cmap=cmap, alpha=alpha) # cmap="binary"
+            #ax.contourf(X, Y, z, [l0, three_sigma, two_sigma, one_sigma, l1], cmap=cmap)
+            #C = ax.contour(X, Y, z, [one_sigma, two_sigma, three_sigma], cmap=cmap) # cmap="binary"
         else:
-            ax.contourf(X, Y, z, [three_sigma, two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
-            C = ax.contour(X, Y, z, [three_sigma, two_sigma, one_sigma], cmap=cmap, alpha=alpha) # cmap="binary"
-        #ax.contourf(X, Y, z, [l0, three_sigma, two_sigma, one_sigma, l1], cmap=cmap)
-        #C = ax.contour(X, Y, z, [one_sigma, two_sigma, three_sigma], cmap=cmap) # cmap="binary"
-    else:
-        ax.contourf(X, Y, z, [one_sigma, l1], cmap=cmap, alpha=1*alpha)
-        ax.contourf(X, Y, z, [two_sigma, one_sigma], cmap=cmap, alpha=0.5*alpha)
-        if not sigma2:
-            ax.contourf(X, Y, z, [three_sigma, two_sigma], cmap=cmap, alpha=0.2*alpha)
+            ax.contourf(X, Y, z, [one_sigma, l1], cmap=cmap, alpha=1*alpha)
+            ax.contourf(X, Y, z, [two_sigma, one_sigma], cmap=cmap, alpha=0.5*alpha)
+            if not sigma2:
+                ax.contourf(X, Y, z, [three_sigma, two_sigma], cmap=cmap, alpha=0.2*alpha)
+    except:
+        print("Warning: contour plotting not successful! - ignore plotting!")
     return 0
 
 
@@ -663,3 +666,21 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
                             ax.yaxis.set_label_coords(-0.3, 0.5)
     return fig, axes
 
+
+def extents_sample_multi(mcmc_list):
+    num_param = len(mcmc_list[0][0])
+    extents = []
+
+    for k in range(num_param):
+        min_k = []
+        max_k = []
+        for i, mcmc in enumerate(mcmc_list):
+            min_k.append(min(mcmc[:,k]))
+            max_k.append(max(mcmc[:,k]))
+        min_k = min(min_k)
+        max_k = max(max_k)
+        if min_k == max_k:
+            min_k -= 1
+            max_k += 1
+        extents.append([min_k, max_k])
+    return extents
