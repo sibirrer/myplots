@@ -362,12 +362,19 @@ def hist2d(x, y, *args, **kwargs):
     ax.set_ylim(extent[1])
 
 
-def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=None, alpha_off=False, sigma2=False):
+def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=None, alpha_off=False, sigma2=False, max_sample=None):
+
+    x_new, y_new = x, y
+    if max_sample is not None:
+        if len(x) > max_sample:
+            idex = np.random.choice(len(x), max_sample)
+            x_new = x[idex]
+            y_new = y[idex]
     if weights is None:
-        weights = np.ones_like(x)
+        weights = np.ones_like(x_new)
     X = np.linspace(extent[0][0], extent[0][1], bins + 1)
     Y = np.linspace(extent[1][0], extent[1][1], bins + 1)
-    H, X, Y = np.histogram2d(x.flatten(), y.flatten(), bins=(X, Y), weights=weights)
+    H, X, Y = np.histogram2d(x_new.flatten(), y_new.flatten(), bins=(X, Y), weights=weights)
     X = X[1::]-(X[1]-X[0])/2.
     Y = Y[1::]-(Y[1]-Y[0])/2.
     ax.set_xlim(extent[0])
@@ -403,8 +410,9 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
             mini, maxi) * s / cell_area
         two_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9545,
             mini, maxi) * s / cell_area
-        three_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9973,
-            mini, maxi) *s / cell_area
+        if not sigma2:
+            three_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9973,
+                mini, maxi) *s / cell_area
     except:
         print("Warning: too small area of contours or no point within the extent!")
         return 0
@@ -675,8 +683,8 @@ def extents_sample_multi(mcmc_list):
         min_k = []
         max_k = []
         for i, mcmc in enumerate(mcmc_list):
-            min_k.append(min(mcmc[:,k]))
-            max_k.append(max(mcmc[:,k]))
+            min_k.append(min(mcmc[:, k]))
+            max_k.append(max(mcmc[:, k]))
         min_k = min(min_k)
         max_k = max(max_k)
         if min_k == max_k:
