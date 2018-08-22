@@ -431,6 +431,10 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
             ax.contourf(X, Y, z, [two_sigma, one_sigma], cmap=cmap, alpha=0.5*alpha)
             if not sigma2:
                 ax.contourf(X, Y, z, [three_sigma, two_sigma], cmap=cmap, alpha=0.2*alpha)
+                #C = ax.contour(X, Y, z, [three_sigma, two_sigma, one_sigma], cmap=cmap, alpha=alpha)
+            else:
+                pass
+                #C = ax.contour(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
     except:
         print("Warning: contour plotting not successful! - ignore plotting!")
     return 0
@@ -438,8 +442,8 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
 
 def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titles=False, title_fmt=".2f",
            title_args={}, extents=None, truths=None, truth_color="#4682b4",
-           scale_hist=False, quantiles=[], verbose=True, dots=None, fig=None, hist1d_bool=True, alpha_off=False,
-           color_scale_list=["Blues", "BuPu", "Greens", "Oranges", "Reds", "binary"] , **kwargs):
+           scale_hist=False, quantiles=[0.16, 0.5, 0.84], verbose=True, dots=None, fig=None, hist1d_bool=True, alpha_off=False,
+           color_scale_list=["Blues", "Greens", "Oranges", "Reds", "BuPu", "binary"] , **kwargs):
     """
     Make a *sick* corner plot showing the projections of a list of data sets in a
     multi-dimensional space. kwargs are passed to hist2d() or used for
@@ -492,6 +496,9 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
         Draw the individual data points.
     fig : matplotlib.Figure (optional)
         Overplot onto the provided figure object.
+
+
+    kwargs['bins']: number of bins in 1d histogram
     """
 
     # Deal with 1D sample lists.
@@ -570,9 +577,14 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
             # Plot the histograms.
             if True: #hist1d_bool:
                 try:
-                    n, b, p = ax.hist(x, weights=weights_list[z], bins=kwargs.get("bins", 200),
+                    if 'color_list' in kwargs:
+                        color_list = kwargs['color_list']
+                        color = color_list[z]
+                    else:
+                        color = "k"
+                    n, b, p = ax.hist(x, weights=weights_list[z], bins=kwargs.get("bins", 50),
                               range=extents[i], histtype="step",
-                              color=kwargs.get("color", "k"))
+                              color=color, normed=True)
                 except:
                     print("Warning: 1d Histogramm could not be plotted!")
             ax.set_facecolor('white')
@@ -675,7 +687,7 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
     return fig, axes
 
 
-def extents_sample_multi(mcmc_list):
+def extents_sample_multi(mcmc_list, percentile=1, sort=False):
     num_param = len(mcmc_list[0][0])
     extents = []
 
@@ -683,8 +695,16 @@ def extents_sample_multi(mcmc_list):
         min_k = []
         max_k = []
         for i, mcmc in enumerate(mcmc_list):
-            min_k.append(min(mcmc[:, k]))
-            max_k.append(max(mcmc[:, k]))
+            if sort is True:
+                mcmc_sort = np.sort(mcmc[:, k])
+                n = len(mcmc_sort)
+                max_ki = mcmc_sort[int(n*percentile-1)]
+                min_ki = mcmc_sort[int(n*(1.-percentile))]
+            else:
+                min_ki = min(mcmc[:, k])
+                max_ki = max(mcmc[:, k])
+            min_k.append(min_ki)
+            max_k.append(max_ki)
         min_k = min(min_k)
         max_k = max(max_k)
         if min_k == max_k:
