@@ -362,7 +362,8 @@ def hist2d(x, y, *args, **kwargs):
     ax.set_ylim(extent[1])
 
 
-def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=None, alpha_off=False, sigma2=False, max_sample=None):
+def hist2d_sigma(x, y, ax, extent, cmap="binary", color='k', alpha=1., bins=100, weights=None, alpha_off=False, sigma2=False,
+                 max_sample=None, filled=True, plot_lines=True):
 
     x_new, y_new = x, y
     if max_sample is not None:
@@ -410,40 +411,51 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", alpha=1., bins=100, weights=No
             mini, maxi) * s / cell_area
         two_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9545,
             mini, maxi) * s / cell_area
-        if not sigma2:
-            three_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9973,
-                mini, maxi) *s / cell_area
+        three_sigma = brentq(lambda t: z_int[z_int > t].sum() - .9973,
+            mini, maxi) *s / cell_area
     except:
         print("Warning: too small area of contours or no point within the extent!")
         return 0
-    try:
-        if alpha_off is True:
-            if sigma2:
-                ax.contourf(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
-                C = ax.contour(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha) # cmap="binary"
+    # change opacity for different sigma contours
+    if alpha_off is True:
+        alpha_1 = alpha
+        alpha_2 = alpha
+        alpha_3 = alpha
+    else:
+        alpha_1 = alpha
+        alpha_2 = alpha * 0.5
+        alpha_3 = alpha * 0.2
+    if True:
+    #try:
+        if filled is True:
+            if alpha_off is True:
+                if sigma2 is True:
+                    ax.contourf(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
+                else:
+                    ax.contourf(X, Y, z, [three_sigma, two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
             else:
-                ax.contourf(X, Y, z, [three_sigma, two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
-                C = ax.contour(X, Y, z, [three_sigma, two_sigma, one_sigma], cmap=cmap, alpha=alpha) # cmap="binary"
-            #ax.contourf(X, Y, z, [l0, three_sigma, two_sigma, one_sigma, l1], cmap=cmap)
-            #C = ax.contour(X, Y, z, [one_sigma, two_sigma, three_sigma], cmap=cmap) # cmap="binary"
-        else:
-            ax.contourf(X, Y, z, [one_sigma, l1], cmap=cmap, alpha=1*alpha)
-            ax.contourf(X, Y, z, [two_sigma, one_sigma], cmap=cmap, alpha=0.5*alpha)
-            if not sigma2:
-                ax.contourf(X, Y, z, [three_sigma, two_sigma], cmap=cmap, alpha=0.2*alpha)
-                #C = ax.contour(X, Y, z, [three_sigma, two_sigma, one_sigma], cmap=cmap, alpha=alpha)
+                ax.contourf(X, Y, z, [one_sigma, l1], cmap=cmap, alpha=alpha_1)
+                ax.contourf(X, Y, z, [two_sigma, one_sigma], cmap=cmap, alpha=alpha_2)
+                if not sigma2:
+                    ax.contourf(X, Y, z, [three_sigma, two_sigma], cmap=cmap, alpha=alpha_3)
+        if plot_lines is True:
+            if sigma2 is True:
+                C = ax.contour(X, Y, z, [two_sigma, one_sigma], colors=color, linestyles=['dashed', 'solid'])  # , alpha=alpha)
             else:
-                pass
-                #C = ax.contour(X, Y, z, [two_sigma, one_sigma, l1], cmap=cmap, alpha=alpha)
-    except:
-        print("Warning: contour plotting not successful! - ignore plotting!")
+                C = ax.contour(X, Y, z, [three_sigma, two_sigma, one_sigma], colors=color, linestyles=['dotted', 'dashed', 'solid'])  # , alpha=alpha)
+
+    #except:
+    #    print("Warning: contour plotting not successful! - ignore plotting!")
     return 0
 
 
 def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titles=False, title_fmt=".2f",
            title_args={}, extents=None, truths=None, truth_color="#4682b4",
-           scale_hist=False, quantiles=[0.16, 0.5, 0.84], verbose=True, dots=None, fig=None, hist1d_bool=True, alpha_off=False,
-           color_scale_list=["Blues", "Greens", "Oranges", "Reds", "BuPu", "binary"] , **kwargs):
+           scale_hist=False, quantiles=[0.16, 0.5, 0.84], verbose=True, dots=None, fig=None, hist1d_bool=True,
+                 cmap_list=["Blues", "Greens", "Oranges", "Reds", "BuPu", "binary"],
+                 line_style_list = ['dashed', 'solid', 'dotted'],
+                 color_list=['b', 'g', 'orange', 'r', 'purple', 'k'],
+                 kwargs_hist2d={}, kwargs_hist1d={}, **kwargs):
     """
     Make a *sick* corner plot showing the projections of a list of data sets in a
     multi-dimensional space. kwargs are passed to hist2d() or used for
@@ -577,14 +589,12 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
             # Plot the histograms.
             if True: #hist1d_bool:
                 try:
-                    if 'color_list' in kwargs:
-                        color_list = kwargs['color_list']
-                        color = color_list[z]
-                    else:
-                        color = "k"
-                    n, b, p = ax.hist(x, weights=weights_list[z], bins=kwargs.get("bins", 50),
-                              range=extents[i], histtype="step",
-                              color=color, normed=True)
+                    color = color_list[z]
+                    linestyle = line_style_list[z]
+                    n, b, p = ax.hist(x, weights=weights_list[z],
+                              range=extents[i], color=color, normed=True, histtype="step", linestyle=linestyle,
+                                      **kwargs_hist1d
+                              )
                 except:
                     print("Warning: 1d Histogramm could not be plotted!")
             ax.set_facecolor('white')
@@ -657,7 +667,7 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
                 elif j == i:
                     continue
                 ax.set_facecolor('white')
-                hist2d_sigma(y, x, ax=ax, extent=[extents[j], extents[i]], cmap=color_scale_list[z], alpha=kwargs.get("alpha", 0.5), bins=kwargs.get("bins", 200), alpha_off=alpha_off, sigma2=kwargs.get('sigma2', False))
+                hist2d_sigma(y, x, ax=ax, extent=[extents[j], extents[i]], cmap=cmap_list[z], color=color_list[z], **kwargs_hist2d)
                 if z == 0:
                     if truths is not None:
                         ax.plot(truths[j], truths[i], "s", color=truth_color)
