@@ -619,15 +619,17 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
             if show_titles and z == 0:
                 # Compute the quantiles for the title. This might redo
                 # unneeded computation but who cares.
-                q_16, q_50, q_84 = quantile(x, [0.16, 0.5, 0.84],
-                                                weights=weights_list[z])
-                q_m, q_p = q_50-q_16, q_84-q_50
+                #q_16, q_50, q_84 = quantile(x, [0.16, 0.5, 0.84],
+                #                                weights=weights_list[z])
+                #q_m, q_p = q_50-q_16, q_84-q_50
 
                 # Format the quantile display.
-                fmt = "{{0:{0}}}".format(title_fmt).format
-                title = r"${{{0}}}_{{-{1}}}^{{+{2}}}$"
-                title = title.format(fmt(q_50), fmt(q_m), fmt(q_p))
+                #fmt = "{{0:{0}}}".format(title_fmt).format
+                #title = r"${{{0}}}_{{-{1}}}^{{+{2}}}$"
+                #title = title.format(fmt(q_50), fmt(q_m), fmt(q_p))
 
+                # compute and format quartiles
+                title = result_string(x, weights=weights_list[z], title_fmt=title_fmt)
                 # Add in the column name if it's given.
                 if labels is not None:
                     title = "{0} = {1}".format(labels[i], title)
@@ -722,3 +724,24 @@ def extents_sample_multi(mcmc_list, percentile=1, sort=False):
             max_k += 1
         extents.append([min_k, max_k])
     return extents
+
+
+def result_string(x, weights=None, title_fmt=".2f", label=None):
+    """
+
+    :param x: marginalized 1-d posterior
+    :param weights: weights of posteriors (optional)
+    :param title_fmt: format to what digit the results are presented
+    :param label: string of parameter label (optional)
+    :return: string with mean \pm quartile
+    """
+    q_16, q_50, q_84 = quantile(x, [0.16, 0.5, 0.84], weights=weights)
+    q_m, q_p = q_50 - q_16, q_84 - q_50
+
+    # Format the quantile display.
+    fmt = "{{0:{0}}}".format(title_fmt).format
+    title = r"${{{0}}}_{{-{1}}}^{{+{2}}}$"
+    title = title.format(fmt(q_50), fmt(q_m), fmt(q_p))
+    if label is not None:
+        title = "{0} = {1}".format(label, title)
+    return title
