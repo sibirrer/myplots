@@ -2,7 +2,6 @@
 Tests for `myplots` module.
 """
 import pytest
-from myplots import myplots
 
 
 class TestMyplots(object):

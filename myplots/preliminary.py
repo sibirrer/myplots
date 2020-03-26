@@ -60,15 +60,3 @@ def preliminize(text="Preliminary", ax=None, **kwargs):
 
     # set the text
     ax.text(0.5, 0.5, text, fontdict=fontdict, rotation=rotation, transform=ax.transAxes)
-
-
-
-if __name__ == "__main__":
-    # test case
-    fig, ax = plt.subplots(figsize=(8, 6))
-    x = range(10)
-    y = [xi ** 2 + 1 for xi in x]
-    ax.plot(x, y)
-
-    preliminize()
-    plt.savefig('preliminize.png')

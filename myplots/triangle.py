@@ -1,6 +1,5 @@
 """
-this code is a development of the triangle code by Daniel Foreman-Mackey
-simon.birrer@phys.ethz.ch
+this code is a development of the corner package by Daniel Foreman-Mackey
 
 """
 
@@ -452,10 +451,11 @@ def hist2d_sigma(x, y, ax, extent, cmap="binary", color='k', alpha=1., bins=100,
 def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titles=False, title_fmt=".2f",
            title_args={}, extents=None, truths=None, truth_color="#4682b4",
            scale_hist=False, quantiles=[0.16, 0.5, 0.84], verbose=True, dots=None, fig=None, hist1d_bool=True,
+                 scatter_plot=False, kwargs_scatter={},
                  cmap_list=["Blues", "Greens", "Oranges", "Reds", "BuPu", "binary"],
                  line_style_list = ['dashed', 'solid', 'dotted'],
                  color_list=['b', 'g', 'orange', 'r', 'purple', 'k'],
-                 kwargs_hist2d={}, kwargs_hist1d={}, **kwargs):
+                 kwargs_hist2d={}, kwargs_hist1d={'density': True, 'histtype': "step"}, **kwargs):
     """
     Make a *sick* corner plot showing the projections of a list of data sets in a
     multi-dimensional space. kwargs are passed to hist2d() or used for
@@ -508,7 +508,9 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
         Draw the individual data points.
     fig : matplotlib.Figure (optional)
         Overplot onto the provided figure object.
-
+    hist1d_bool: bool, if True, plots the 1d histograms
+    scatter_plot: bool, if True, plots individual data points instead of contours (default is True)
+    kwargs_scatter: keyword argument for the plot() routine of the scatter plot
 
     kwargs['bins']: number of bins in 1d histogram
     """
@@ -522,8 +524,8 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
         else:
             assert len(xs.shape) == 2, "The input sample array must be 1- or 2-D."
             xs = xs.T
-        assert xs.shape[0] <= xs.shape[1], "I don't believe that you want more " \
-                                           "dimensions than samples!"
+        #assert xs.shape[0] <= xs.shape[1], "I don't believe that you want more " \
+        #                                   "dimensions than samples!"
         xs_list_.append(xs)
     xs_list = xs_list_
     if weights_list is not None:
@@ -563,6 +565,14 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
     if extents is None:
         # if no extents are assigned, one takes the ones from the first sample
         extents = [[x.min(), x.max()] for x in xs_list[0]]
+        for xs in xs_list:
+            for j, x in enumerate(xs):
+                xmin = x.min()
+                xmax = x.max()
+                if extents[j][0] > xmin:
+                    extents[j][0] = xmin
+                if extents[j][1] < xmax:
+                    extents[j][1] = xmax
 
         # Check for parameters that never change.
         m = np.array([e[0] == e[1] for e in extents], dtype=bool)
@@ -592,9 +602,7 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
                     color = color_list[z]
                     linestyle = line_style_list[z]
                     n, b, p = ax.hist(x, weights=weights_list[z],
-                              range=extents[i], color=color, normed=True, histtype="step", linestyle=linestyle,
-                                      **kwargs_hist1d
-                              )
+                              range=extents[i], color=color, linestyle=linestyle, **kwargs_hist1d)
                 except:
                     print("Warning: 1d Histogramm could not be plotted!")
             ax.set_facecolor('white')
@@ -669,7 +677,12 @@ def corner_multi(xs_list, weights_list=None, labels=None, fontsize=20, show_titl
                 elif j == i:
                     continue
                 ax.set_facecolor('white')
-                hist2d_sigma(y, x, ax=ax, extent=[extents[j], extents[i]], cmap=cmap_list[z], color=color_list[z], **kwargs_hist2d)
+                if scatter_plot is True:
+                    ax.plot(y, x, color=color_list[z], **kwargs_scatter)
+                    ax.set_xlim(extents[j])
+                    ax.set_ylim(extents[i])
+                else:
+                    hist2d_sigma(y, x, ax=ax, extent=[extents[j], extents[i]], cmap=cmap_list[z], color=color_list[z], **kwargs_hist2d)
                 if z == 0:
                     if truths is not None:
                         ax.plot(truths[j], truths[i], "s", color=truth_color)
