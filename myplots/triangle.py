@@ -170,19 +170,11 @@ def corner(xs, weights=None, labels=None, fontsize=20, show_titles=False, title_
             if show_titles:
                 # Compute the quantiles for the title. This might redo
                 # unneeded computation but who cares.
-                q_16, q_50, q_84 = quantile(x, [0.16, 0.5, 0.84],
-                                            weights=weights)
-                q_m, q_p = q_50-q_16, q_84-q_50
-
-                # Format the quantile display.
-                fmt = "{{0:{0}}}".format(title_fmt).format
-                title = r"${{{0}}}_{{-{1}}}^{{+{2}}}$"
-                title = title.format(fmt(q_50), fmt(q_m), fmt(q_p))
-
+                # compute and format quartiles
+                title = result_string(x, weights=weights, title_fmt=title_fmt)
                 # Add in the column name if it's given.
                 if labels is not None:
                     title = "{0} = {1}".format(labels[i], title)
-
                 # Add the title to the axis.
                 ax.set_title(title, **title_args)
 
